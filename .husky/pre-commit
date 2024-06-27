@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# PHPCS
+vendor/bin/phpcs --standard=PSR12 --encoding=utf-8 --ignore=*/vendor/*,*/node_modules/*,*/tests/* --colors .
+
+# PHPStan
+vendor/bin/phpstan --configuration=phpstan.neon --no-progress --memory-limit=1G
+
+exit 0
