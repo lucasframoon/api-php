@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Src\Controller;
 
 use Src\Repository\UserRepository;
@@ -10,11 +12,6 @@ class UserController extends Controller
     public function __construct(
         private UserRepository $repository
     ) {
-    }
-
-    public function login(): array
-    {
-        return $this->successResponse(['token' => 'TODO TOKEN']);
     }
 
     public function register(): array
@@ -37,10 +34,10 @@ class UserController extends Controller
         }
 
         return $this->repository->save([
-            'name' => $name,
-            'email' => $email,
-            'password' => $password,
-            'id' => null
+            'name'      => $name,
+            'email'     => $email,
+            'password'  => password_hash($password, PASSWORD_BCRYPT),
+            'id'        => null
         ]);
     }
 
