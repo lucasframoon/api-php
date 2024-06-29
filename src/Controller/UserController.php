@@ -3,6 +3,7 @@
 namespace Src\Controller;
 
 use Src\Repository\UserRepository;
+use Src\Util\Util;
 
 class UserController extends Controller
 {
@@ -27,6 +28,10 @@ class UserController extends Controller
             return ['status' => 'error', 'message' => 'missing parameter: email'];
         }
 
+        if (!Util::isValidEMail($email)) {
+            return ['status' => 'error', 'message' => 'invalid email'];
+        }
+
         if (!$password = $_POST['password'] ?? null) {
             return ['status' => 'error', 'message' => 'missing parameter: password'];
         }
@@ -42,7 +47,7 @@ class UserController extends Controller
     public function getData(array $params): array
     {
         $id = $params['id'] ?? null;
-        if (!is_numeric($id) && ctype_digit($id)) {
+        if (!Util::isValidId($id)) {
             return ['status' => 'error', 'message' => 'ID must be an integer'];
         }
 
@@ -56,7 +61,7 @@ class UserController extends Controller
     public function update(array $params): array
     {
         $id = $params['id'] ?? null;
-        if (!is_numeric($id) && ctype_digit($id)) {
+        if (!Util::isValidId($id)) {
             return ['status' => 'error', 'message' => 'ID must be an integer'];
         }
 
@@ -80,10 +85,25 @@ class UserController extends Controller
         return $this->repository->save($update, (int)$id);
     }
 
-    //TODO
     public function delete(): array
     {
-        return ['delete'];
-        // $this->repository->delete();
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            return ['status' => 'error', 'message' => 'Invalid JSON'];
+        }
+
+        $id = $data['id'] ?? null;
+        if (!Util::isValidId($id)) {
+            return ['status' => 'error', 'message' => 'ID must be an integer'];
+        }
+
+        $result = $this->repository->delete((int)$id);
+        if (!$result) {
+            return ['status' => 'error', 'message' => 'User not found'];
+        }
+
+        return ['status' => 'success', 'message' => 'User deleted'];
     }
 }
