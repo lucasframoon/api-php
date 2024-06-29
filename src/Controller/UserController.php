@@ -14,26 +14,26 @@ class UserController extends Controller
 
     public function login(): array
     {
-        return ['status' => 'success', 'token' => 'TODO TOKEN'];
+        return $this->successResponse(['token' => 'TODO TOKEN']);
     }
 
     public function register(): array
     {
 
         if (!$name = $_POST['name'] ?? null) {
-            return ['status' => 'error', 'message' => 'missing parameter: name'];
+            return $this->errorResponse(['message' => 'missing parameter: name']);
         }
 
         if (!$email = $_POST['email'] ?? null) {
-            return ['status' => 'error', 'message' => 'missing parameter: email'];
+            return $this->errorResponse(['message' => 'missing parameter: email']);
         }
 
         if (!Util::isValidEMail($email)) {
-            return ['status' => 'error', 'message' => 'invalid email'];
+            return $this->errorResponse(['message' => 'invalid email']);
         }
 
         if (!$password = $_POST['password'] ?? null) {
-            return ['status' => 'error', 'message' => 'missing parameter: password'];
+            return $this->errorResponse(['message' => 'missing parameter: password']);
         }
 
         return $this->repository->save([
@@ -48,30 +48,28 @@ class UserController extends Controller
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return ['status' => 'error', 'message' => 'ID must be an integer'];
+            return $this->errorResponse(['message' => 'ID must be an integer']);
         }
 
         if ($userData = $this->repository->getData((int)$id)) {
-            return ['status' => 'success', 'user' => $userData];
+            return $this->successResponse(['user' => $userData]);
         }
 
-        return ['status' => 'error', 'message' => 'User not found'];
+        return $this->errorResponse(['message' => 'User not found']);
     }
 
     public function update(array $params): array
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return ['status' => 'error', 'message' => 'ID must be an integer'];
+            return $this->errorResponse(['message' => 'ID must be an integer']);
         }
 
         $update = [];
 
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            http_response_code(400);
-            return ['status' => 'error', 'message' => 'Invalid JSON'];
+        $data = $this->getInputStreamParams('PUT');
+        if (!$data) {
+            return $this->errorResponse(['message' => 'Invalid JSON']);
         }
 
         if ($name = $data['name'] ?? null) {
@@ -87,23 +85,21 @@ class UserController extends Controller
 
     public function delete(): array
     {
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            http_response_code(400);
-            return ['status' => 'error', 'message' => 'Invalid JSON'];
+        $data = $this->getInputStreamParams('DELETE');
+        if (!$data) {
+            return $this->errorResponse(['message' => 'Invalid JSON']);
         }
 
         $id = $data['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return ['status' => 'error', 'message' => 'ID must be an integer'];
+            return $this->errorResponse(['message' => 'ID must be an integer']);
         }
 
         $result = $this->repository->delete((int)$id);
         if (!$result) {
-            return ['status' => 'error', 'message' => 'User not found'];
+            return $this->errorResponse(['message' => 'User not found']);
         }
 
-        return ['status' => 'success', 'message' => 'User deleted'];
+        return $this->successResponse(['message' => 'User deleted']);
     }
 }
