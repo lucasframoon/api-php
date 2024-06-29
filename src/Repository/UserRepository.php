@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Src\Repository;
 
 use PDO;
@@ -25,7 +27,7 @@ class UserRepository extends BaseRepository
      * Return user data
      *
      * @param integer $id
-     * @return array
+     * @return array|null
      */
     public function getData(int $id): ?array
     {
@@ -33,8 +35,11 @@ class UserRepository extends BaseRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
 
-        if ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $user;
+        if ($stmt->rowCount() > 0) {
+            $result = $stmt->fetch();
+            $this->model->fromArray($result, false);
+            unset($result['password']);
+            return $result;
         }
 
         return null;
@@ -43,14 +48,18 @@ class UserRepository extends BaseRepository
     public function save(array $data, ?int $id = null): array
     {
         if ($id > 0) {
-            if ($this->update($data, $id)) {
-                $user = $this->findById($id);
-                return ['status' => 'success', 'message' => 'User updated successfully', 'user' => $user];
+            $result = $this->update($data, $id);
+            $user = $this->findById($id);
+
+            if (!$user) {
+                return ['status' => 'error', 'message' => 'User not found'];
+            } elseif (!$result) {
+                return ['status' => 'error', 'message' => 'Failed to update user'];
             }
 
-            return ['status' => 'error', 'message' => 'Failed to update user'];
+            return ['status' => 'success', 'message' => 'User updated successfully', 'user' => $user];
         } else {
-            if (!empty($this->findByColumn('email', $data['email']))) {
+            if ($this->findByColumn('email', $data['email'])) {
                 return ['status' => 'error', 'message' => 'Email already exists'];
             }
 
@@ -60,6 +69,27 @@ class UserRepository extends BaseRepository
 
             return ['status' => 'error', 'message' => 'Failed to create user'];
         }
+    }
+
+    /**
+     * Find user by email
+     *
+     * @param string $email
+     * @return User
+     */
+    public function findUserByEmail(string $email): ?User
+    {
+        $sql = "SELECT * FROM " . $this->tableName . " WHERE email LIKE :email";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':email', $email);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return $this->model->fromArray($stmt->fetch());
+        }
+
+        return null;
     }
 
     //TODO
