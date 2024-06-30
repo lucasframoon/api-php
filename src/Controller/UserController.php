@@ -16,21 +16,24 @@ class UserController extends Controller
 
     public function register(): array
     {
-
         if (!$name = $_POST['name'] ?? null) {
-            return $this->errorResponse(['message' => 'missing parameter: name']);
+            $missingParameter[] = 'name';
         }
 
         if (!$email = $_POST['email'] ?? null) {
-            return $this->errorResponse(['message' => 'missing parameter: email']);
+            $missingParameter[] = 'email';
         }
 
         if (!Util::isValidEMail($email)) {
-            return $this->errorResponse(['message' => 'invalid email']);
+            return $this->errorResponse('Invalid email', 'INVALID_PARAMETER');
         }
 
         if (!$password = $_POST['password'] ?? null) {
-            return $this->errorResponse(['message' => 'missing parameter: password']);
+            $missingParameter[] = 'password';
+        }
+
+        if (!empty($missingParameter)) {
+            return $this->errorResponse($this->getMissingParametersText($missingParameter), 'MISSING_PARAMETERS');
         }
 
         return $this->repository->save([
@@ -45,28 +48,29 @@ class UserController extends Controller
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
-        if ($userData = $this->repository->getData((int)$id)) {
-            return $this->successResponse(['user' => $userData]);
+        $data = $this->repository->getData((int)$id, true);
+        if ($data) {
+            return $this->successResponse(['user' => $data['user'], 'addresses' => $data['addresses']]);
         }
 
-        return $this->errorResponse(['message' => 'User not found']);
+        return $this->successResponse(['user' => [], 'addresses' => []]);
     }
 
     public function update(array $params): array
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
         $update = [];
 
         $data = $this->getInputStreamParams('PUT');
         if (!$data) {
-            return $this->errorResponse(['message' => 'Invalid JSON']);
+            return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
         if ($name = $data['name'] ?? null) {
@@ -80,21 +84,16 @@ class UserController extends Controller
         return $this->repository->save($update, (int)$id);
     }
 
-    public function delete(): array
+    public function delete(array $params): array
     {
-        $data = $this->getInputStreamParams('DELETE');
-        if (!$data) {
-            return $this->errorResponse(['message' => 'Invalid JSON']);
-        }
-
-        $id = $data['id'] ?? null;
+        $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
         $result = $this->repository->delete((int)$id);
         if (!$result) {
-            return $this->errorResponse(['message' => 'User not found']);
+            return $this->errorResponse('User not found', 'NOT_FOUND');
         }
 
         return $this->successResponse(['message' => 'User deleted']);

@@ -25,7 +25,9 @@ abstract class BaseRepository
      */
     public function findById(int $id): ?array
     {
-        $sql = "SELECT * FROM " . $this->tableName . " WHERE id = :id";
+        $sql = "SELECT * 
+                FROM " . $this->tableName . " 
+                WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
 
@@ -33,7 +35,7 @@ abstract class BaseRepository
     }
 
     /**
-     * Find by specific column like '%%'
+     * Find a record by specific column using LIKE '%%'
      *
      * @param string $colunmName The name of the column to search
      * @param string $value The value to search for
@@ -41,10 +43,11 @@ abstract class BaseRepository
      */
     public function findByColumn(string $colunmName, string $value): ?array
     {
-        $sql = "SELECT * FROM " . $this->tableName . " WHERE {$colunmName} LIKE :value";
-
+        $sql = "SELECT * 
+                FROM " . $this->tableName . " 
+                WHERE {$colunmName} LIKE :value";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':value', $value);
+        $stmt->bindValue(':value', '%' . $value . '%');
         $stmt->execute();
 
         return $stmt->rowCount() > 0 ? $stmt->fetchAll() : null;
@@ -57,7 +60,8 @@ abstract class BaseRepository
      */
     public function findAll(): ?array
     {
-        $sql = "SELECT * FROM " . $this->tableName;
+        $sql = "SELECT * 
+                FROM " . $this->tableName;
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
 
