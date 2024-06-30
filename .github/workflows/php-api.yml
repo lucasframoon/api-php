@@ -33,14 +33,14 @@ jobs:
     
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-
-    - name: Fix permissions
-      run: sudo chown -R $USER:$USER vendor
     
     - name: Install Composer dependencies
       run: |
         composer install --no-scripts --no-progress --prefer-dist
         composer dump-autoload --optimize --no-dev --classmap-authoritative
+        
+    - name: Fix permissions
+      run: sudo chown -R $USER:$USER vendor
     
     - name: Install Node.js dependencies
       run: npm install
