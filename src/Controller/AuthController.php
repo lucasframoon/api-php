@@ -7,6 +7,7 @@ namespace Src\Controller;
 use Src\Util\Util;
 use Firebase\JWT\JWT;
 use Src\Repository\UserRepository;
+use Src\Model\User;
 
 class AuthController extends Controller
 {
@@ -27,12 +28,13 @@ class AuthController extends Controller
             return $this->errorResponse(['message' => 'Invalid credentials']);
         }
 
+        /** @var User $user */
         $user = $this->repository->findUserByEmail($email);
-        if (!$user->getId() || !password_verify($password, $user->getPassword())) {
+        if (!$user || !password_verify($password, $user->getPassword())) {
             return $this->errorResponse(['message' => 'Invalid email or password']);
         } else {
             $payload = [
-                'iss' => 'your_domain.com',
+                'iss' => 'phpapi.com',
                 'iat' => time(),
                 // 'exp' => time() + (60 * 60), // 1 hour expiration TODO ACTIVE
                 'sub' => $user->getid()
