@@ -44,7 +44,7 @@ class Controller
      *
      * @param string $message An optional error message to include in the response
      * @param string $status
-     * @param string $code An optional error code to http response code
+     * @param int $code An optional error code to http response code
      * @return array
      */
     public static function errorResponse(string $message = '', string $status = 'ERROR', int $code = 400): array

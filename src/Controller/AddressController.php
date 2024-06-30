@@ -19,7 +19,7 @@ class AddressController extends Controller
         $missingParameter = [];
 
         if (!$userId = $_SESSION['user_id'] ?? null) {
-            return $this->errorResponse(['message' => 'Please log in first']);
+            return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
 
         if (!$street = $_POST['street'] ?? null) {
@@ -43,7 +43,7 @@ class AddressController extends Controller
         }
 
         if (!empty($missingParameter)) {
-            return $this->errorResponse(['message' => $this->getMissingParametersText($missingParameter)]);
+            return $this->errorResponse($this->getMissingParametersText($missingParameter), 'MISSING_PARAMETERS');
         }
 
         return $this->repository->save([
@@ -62,18 +62,18 @@ class AddressController extends Controller
         $currentUserId = $_SESSION['user_id'] ?? null;
 
         if (!$currentUserId) {
-            return $this->errorResponse(['message' => 'Please log in first']);
+            return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
 
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
         if ($addressData = $this->repository->getData((int)$id, (int)$currentUserId)) {
             return $this->successResponse(['address' => $addressData]);
         }
 
-        return $this->errorResponse(['message' => 'Address not found']);
+        return $this->successResponse(['address' => []]);
     }
 
     /**
@@ -87,7 +87,7 @@ class AddressController extends Controller
         $where = [];
         $currentUserId = $_SESSION['user_id'] ?? null;
         if (!$currentUserId) {
-            return $this->errorResponse(['message' => 'Please log in first']);
+            return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
 
         //Optional parameters
@@ -119,14 +119,14 @@ class AddressController extends Controller
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
         $update = [];
 
         $data = $this->getInputStreamParams('PUT');
         if (!$data) {
-            return $this->errorResponse(['message' => 'Invalid JSON']);
+            return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
         if ($userId = $_SESSION['user_id'] ?? null) {
@@ -160,12 +160,12 @@ class AddressController extends Controller
     {
         $id = $params['id'] ?? null;
         if (!Util::isValidId($id)) {
-            return $this->errorResponse(['message' => 'ID must be an integer']);
+            return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
         $result = $this->repository->delete((int)$id);
         if (!$result) {
-            return $this->errorResponse(['message' => 'Address not found']);
+            return $this->errorResponse('Address not found', 'NOT_FOUND');
         }
 
         return $this->successResponse(['message' => 'Address deleted']);
