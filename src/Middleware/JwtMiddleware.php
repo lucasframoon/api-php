@@ -30,7 +30,8 @@ class JwtMiddleware
         // Extract the JWT token from the Authorization header
         $token = str_replace('Bearer ', '', $authHeader);
         try {
-            JWT::decode($token, new Key($this->secretKey, $this->algorithm));
+            $decoded = JWT::decode($token, new Key($this->secretKey, $this->algorithm));
+            $_SESSION['user_id'] = $decoded->sub;
         } catch (\Exception $e) {
             http_response_code(401);
             echo json_encode(['status' => 'Unauthorized', 'message' => $e->getMessage()]);

@@ -6,7 +6,6 @@ namespace Src\Model;
 
 abstract class Model implements ModelInterface
 {
-
     /**
      * Creates an instance of the called class from an associative array
      *

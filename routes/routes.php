@@ -8,21 +8,32 @@ ini_set('display_startup_errors', '1');
 require '../vendor/autoload.php';
 require '../config/diconfig.php';
 
-use FastRoute\{Dispatcher, RouteCollector};
 use Src\Middleware\JwtMiddleware;
-use Src\Controller\{UserController, AuthController};
 use function FastRoute\simpleDispatcher;
+use FastRoute\{Dispatcher, RouteCollector};
+use Src\Controller\{UserController, AuthController, AddressController};
 
 $dispatcher = simpleDispatcher(function (RouteCollector $r) {
 
     $r->post('/login', [AuthController::class, 'login']);
     $r->post('/register', [UserController::class, 'register']);
+
     $r->addGroup('/user', function (RouteCollector $r) {
+        $r->get('/address', [AddressController::class, 'getUserAddresses']);
+
         $r->get('/{id:[0-9]+}', [UserController::class, 'getData']);
         $r->put('/{id:[0-9]+}', [UserController::class, 'update']);
         $r->delete('/{id:[0-9]+}', [UserController::class, 'delete']);
     });
+
+    $r->addGroup('/address', function (RouteCollector $r) {
+        $r->get('/{id:[0-9]+}', [AddressController::class, 'getData']);
+        $r->post('/new', [AddressController::class, 'new']);
+        $r->put('/{id:[0-9]+}', [AddressController::class, 'update']);
+        $r->delete('/{id:[0-9]+}', [AddressController::class, 'delete']);
+    });
 });
+
 $httpMethod = $_SERVER['REQUEST_METHOD'];
 $uri = $_SERVER['REQUEST_URI'];
 if (false !== $pos = strpos($uri, '?')) {
