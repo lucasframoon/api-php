@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Src\Repository;
 
 use PDO;
-use Src\Model\User;
+use Src\Model\{User, ModelInterface};
 
 class UserRepository extends BaseRepository
 {
@@ -20,26 +20,34 @@ class UserRepository extends BaseRepository
 
     public function getTable(): string
     {
-        return 'users';
+        return $this->tableName;
     }
 
     /**
      * Return user data
      *
-     * @param integer $id
+     * @param int $id
+     * @param bool $getAdresses (optional) Whether to include addresses in the result. Default is false.
      * @return array|null
      */
-    public function getData(int $id): ?array
+    public function getData(int $id, bool $getAdresses = false): ?array
     {
-        $sql = 'SELECT * FROM ' . $this->tableName . ' WHERE id = :id';
+        $sql = "SELECT * 
+                FROM " . $this->tableName . " 
+                WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
 
         if ($stmt->rowCount() > 0) {
-            $result = $stmt->fetch();
-            $this->model->fromArray($result, false);
-            unset($result['password']);
-            return $result;
+            $userInfo = $stmt->fetch();
+            $this->model->fromArray($userInfo, false);
+            unset($userInfo['password']);
+
+            $userAddressesInfo = [];
+            if ($getAdresses) {
+                $userAddressesInfo = $this->getUserAddress($id);
+            }
+            return ['user' => $userInfo, 'addresses' => $userAddressesInfo];
         }
 
         return null;
@@ -48,18 +56,16 @@ class UserRepository extends BaseRepository
     public function save(array $data, ?int $id = null): array
     {
         if ($id > 0) {
-            $result = $this->update($data, $id);
+            $this->update($data, $id);
             $user = $this->findById($id);
 
             if (!$user) {
                 return ['status' => 'error', 'message' => 'User not found'];
-            } elseif (!$result) {
-                return ['status' => 'error', 'message' => 'Failed to update user'];
             }
 
             return ['status' => 'success', 'message' => 'User updated successfully', 'user' => $user];
         } else {
-            if ($this->findByColumn('email', $data['email'])) {
+            if ($this->findUserByEmail($data['email'])) {
                 return ['status' => 'error', 'message' => 'Email already exists'];
             }
 
@@ -75,11 +81,13 @@ class UserRepository extends BaseRepository
      * Find user by email
      *
      * @param string $email
-     * @return User
+     * @return ModelInterface
      */
-    public function findUserByEmail(string $email): ?User
+    public function findUserByEmail(string $email): ?ModelInterface
     {
-        $sql = "SELECT * FROM " . $this->tableName . " WHERE email LIKE :email";
+        $sql = "SELECT * 
+                FROM " . $this->tableName . " 
+                WHERE email LIKE :email";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':email', $email);
@@ -92,7 +100,19 @@ class UserRepository extends BaseRepository
         return null;
     }
 
-    //TODO
-    // public function getAddressRelations(int $id) {
-    // }
+    public function getUserAddress(int $userId): array
+    {
+        $sql = "SELECT * 
+                FROM addresses 
+                WHERE user_id = :user_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':user_id', $userId);
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
+            return $stmt->fetchAll();
+        }
+
+        return [];
+    }
 }
