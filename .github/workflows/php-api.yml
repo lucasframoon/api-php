@@ -1,4 +1,3 @@
-
 name: CI
 
 # Controls when the workflow will run
@@ -6,7 +5,7 @@ on:
   push:
     branches: ["develop"]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
 
 jobs:
   build:
@@ -14,11 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: php-actions/composer@v6
+    - name: Checkout code
+      uses: actions/checkout@v4 # Atualizado para Node.js 20
+      
+    - name: Set up PHP with Composer
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, intl, dom, xml, zip, json
+        coverage: none
 
     - name: Cache Composer packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3 # Atualizado para Node.js 20
       with:
         path: vendor
         key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
@@ -27,14 +33,17 @@ jobs:
     
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+    - name: Fix permissions
+      run: sudo chown -R $USER:$USER vendor
     
     - name: Install Composer dependencies
       run: |
         composer install --no-scripts --no-progress --prefer-dist
         composer dump-autoload --optimize --no-dev --classmap-authoritative
     
-    - name: Installing Package.json
+    - name: Install Node.js dependencies
       run: npm install
-      
-    - name: Execute PHPSTAN
+    
+    - name: Execute PHPStan
       run: vendor/bin/phpstan analyse
