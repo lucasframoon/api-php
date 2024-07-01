@@ -21,8 +21,8 @@ class AuthController extends Controller
 
     public function login(): array
     {
-        $email = $_POST['email'] ?? null;
-        $password = $_POST['password'] ?? null;
+        $email      = $_POST['email'] ?? null;
+        $password   = $_POST['password'] ?? null;
 
         if (!$email || !$password || !Util::isValidEMail($email)) {
             return $this->errorResponse('Invalid credentials', 'FORBIDDEN', 403);
