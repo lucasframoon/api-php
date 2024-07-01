@@ -39,40 +39,45 @@ $uri = $_SERVER['REQUEST_URI'];
 if (false !== $pos = strpos($uri, '?')) {
     $uri = substr($uri, 0, $pos);
 }
+try {
+    $uri = rawurldecode($uri);
+    $routeInfo = $dispatcher->dispatch($httpMethod, $uri);
+    switch ($routeInfo[0]) {
+        case Dispatcher::NOT_FOUND:
+            http_response_code(404);
+            echo json_encode(['status' => 'NOT_FOUND', 'message' => 'Route not found']);
 
-$uri = rawurldecode($uri);
-$routeInfo = $dispatcher->dispatch($httpMethod, $uri);
-switch ($routeInfo[0]) {
-    case Dispatcher::NOT_FOUND:
-        http_response_code(404);
-        echo json_encode(['message' => 'Not found']);
+            exit;
+        case Dispatcher::METHOD_NOT_ALLOWED:
+            $allowedMethods = $routeInfo[1];
+            http_response_code(405);
+            echo json_encode(['status' => 'NOT_ALLOWED', 'message' => 'Method not allowed']);
 
-        exit;
-    case Dispatcher::METHOD_NOT_ALLOWED:
-        $allowedMethods = $routeInfo[1];
-        http_response_code(405);
-        echo json_encode(['message' => 'Method not allowed']);
+            exit;
+        case Dispatcher::FOUND:
+            $handler = $routeInfo[1];
+            [$controller, $method] = $handler;
+            $vars = $routeInfo[2];
 
-        exit;
-    case Dispatcher::FOUND:
-        $handler = $routeInfo[1];
-        [$controller, $method] = $handler;
-        $vars = $routeInfo[2];
-
-        // Check if the route is protected and requires authentication
-        if (str_starts_with($uri, '/user')) {
-            $next = function () use ($controller, $method, $vars) {
-                global $container;
+            // Check if the route is protected and requires authentication
+            if (!str_starts_with($uri, '/login') && !str_starts_with($uri, '/register')) {
+                $next = function () use ($controller, $method, $vars) {
+                    global $container;
+                    $controller = $container->get($controller);
+                    $response = $controller->$method($vars);
+                    echo json_encode($response);
+                };
+                (new JwtMiddleware())->handle($next);
+            } else {
                 $controller = $container->get($controller);
                 $response = $controller->$method($vars);
-                echo json_encode($response);
-            };
-            (new JwtMiddleware())->handle($next);
-        } else {
-            $controller = $container->get($controller);
-            $response = $controller->$method($vars);
 
-            echo json_encode($response);
-        }
-        break;
+                echo json_encode($response);
+            }
+            break;
+    }
+} catch (\Exception $e) {
+    // TODO Log the error
+    http_response_code(500);
+    echo json_encode(['status' => 'ERROR', 'message' => 'Unexpected error occurred']);
 }
