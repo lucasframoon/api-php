@@ -10,3 +10,5 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+test-results.cache
+.phpunit.cache/*

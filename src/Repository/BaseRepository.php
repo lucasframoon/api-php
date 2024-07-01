@@ -127,7 +127,9 @@ abstract class BaseRepository
      */
     public function delete(int $id): bool
     {
-        $sql = "DELETE FROM " . $this->tableName . " WHERE id = :id";
+        $sql = "DELETE 
+                FROM " . $this->tableName . " 
+                WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
 

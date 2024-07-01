@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Src\Controller;
 
-use Src\Repository\AddressRepository;
 use Src\Util\Util;
+use Src\Helper\HttpRequestHelper;
+use Src\Repository\AddressRepository;
 
 class AddressController extends Controller
 {
     public function __construct(
-        private AddressRepository $repository
+        private AddressRepository $repository,
+        private HttpRequestHelper $httpRequestHelper
     ) {
     }
 
@@ -122,13 +124,12 @@ class AddressController extends Controller
             return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
-        $update = [];
-
-        $data = $this->getInputStreamParams('PUT');
+        $data = $this->httpRequestHelper->getInputStreamParams('PUT');
         if (!$data) {
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
+        $update = [];
         if ($userId = $_SESSION['user_id'] ?? null) {
             $update['user_id'] = $userId;
         }
@@ -141,7 +142,7 @@ class AddressController extends Controller
             $update['city'] = $city;
         }
 
-        if (!$state = $data['state'] ?? null) {
+        if ($state = $data['state'] ?? null) {
             $update['state'] = $state;
         }
 

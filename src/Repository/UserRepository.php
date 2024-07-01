@@ -60,20 +60,20 @@ class UserRepository extends BaseRepository
             $user = $this->findById($id);
 
             if (!$user) {
-                return ['status' => 'error', 'message' => 'User not found'];
+                return ['status' => 'NOT_FOUND', 'message' => 'User not found'];
             }
 
-            return ['status' => 'success', 'message' => 'User updated successfully', 'user' => $user];
+            return ['status' => 'SUCCESS', 'message' => 'User updated successfully', 'id' => $user['id']];
         } else {
             if ($this->findUserByEmail($data['email'])) {
-                return ['status' => 'error', 'message' => 'Email already exists'];
+                return ['status' => 'ALREADY_EXISTS', 'message' => 'Email already exists'];
             }
 
             if ($id = $this->create($data)) {
-                return ['status' => 'success', 'message' => 'User created successfully', 'id' => $id];
+                return ['status' => 'SUCCESS', 'message' => 'User created successfully', 'id' => $id];
             }
 
-            return ['status' => 'error', 'message' => 'Failed to create user'];
+            return ['status' => 'ERROR', 'message' => 'Failed to create user'];
         }
     }
 

@@ -8,7 +8,7 @@ class Util
 {
     public static function isValidId(mixed $id): bool
     {
-        return is_numeric($id) && ctype_digit($id);
+        return filter_var($id, FILTER_VALIDATE_INT) !== false;
     }
 
     public static function isValidEMail($email)
