@@ -57,16 +57,16 @@ class AddressRepository extends BaseRepository
             $address = $this->getData($id, (int)$data['user_id']);
 
             if (!$address) {
-                return ['status' => 'error', 'message' => 'Address not found'];
+                return ['status' => 'NOT_FOUND', 'message' => 'Address not found'];
             }
 
-            return ['status' => 'success', 'message' => 'Address updated successfully', 'address' => $address];
+            return ['status' => 'SUCCESS', 'message' => 'Address updated successfully', 'address' => $address];
         } else {
             if ($id = $this->create($data)) {
-                return ['status' => 'success', 'message' => 'Address created successfully', 'id' => $id];
+                return ['status' => 'SUCCESS', 'message' => 'Address created successfully', 'id' => $id];
             }
 
-            return ['status' => 'error', 'message' => 'Failed to create address'];
+            return ['status' => 'ERROR', 'message' => 'Failed to create address'];
         }
     }
 
