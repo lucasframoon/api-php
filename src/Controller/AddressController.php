@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Src\Controller;
 
-use Src\Repository\AddressRepository;
 use Src\Util\Util;
+use Src\Helper\HttpRequestHelper;
+use Src\Repository\AddressRepository;
 
 class AddressController extends Controller
 {
     public function __construct(
-        private AddressRepository $repository
+        private AddressRepository $repository,
+        private HttpRequestHelper $httpRequestHelper
     ) {
     }
 
@@ -124,7 +126,7 @@ class AddressController extends Controller
 
         $update = [];
 
-        $data = $this->getInputStreamParams('PUT');
+        $data = $this->httpRequestHelper->getInputStreamParams('PUT');
         if (!$data) {
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }

@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Src\Controller;
 
+use Src\Helper\HttpRequestHelper;
 use Src\Repository\UserRepository;
 use Src\Util\Util;
 
 class UserController extends Controller
 {
     public function __construct(
-        private UserRepository $repository
+        private UserRepository $repository,
+        private HttpRequestHelper $httpRequestHelper
     ) {
     }
 
     public function register(): array
     {
+        $missingParameter = [];
         if (!$name = $_POST['name'] ?? null) {
             $missingParameter[] = 'name';
         }
 
         if (!$email = $_POST['email'] ?? null) {
             $missingParameter[] = 'email';
-        }
-
-        if (!Util::isValidEMail($email)) {
-            return $this->errorResponse('Invalid email', 'INVALID_PARAMETER');
         }
 
         if (!$password = $_POST['password'] ?? null) {
@@ -36,12 +35,24 @@ class UserController extends Controller
             return $this->errorResponse($this->getMissingParametersText($missingParameter), 'MISSING_PARAMETERS');
         }
 
-        return $this->repository->save([
+        if (!Util::isValidEMail($email)) {
+            return $this->errorResponse('Invalid email', 'INVALID_PARAMETER');
+        }
+
+        $user = [
             'name'      => $name,
             'email'     => $email,
             'password'  => password_hash($password, PASSWORD_BCRYPT),
             'id'        => null
-        ]);
+        ];
+
+        $result = $this->repository->save($user);
+
+        if ($result['status'] == 'SUCCESS') {
+            return $this->successResponse(['id' => $result['id']]);
+        }
+
+        return $this->errorResponse($result['message'], $result['status']);
     }
 
     public function getData(array $params): array
@@ -66,13 +77,12 @@ class UserController extends Controller
             return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
-        $update = [];
-
-        $data = $this->getInputStreamParams('PUT');
+        $data = $this->httpRequestHelper->getInputStreamParams('PUT');
         if (!$data) {
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
+        $update = [];
         if ($name = $data['name'] ?? null) {
             $update['name'] = $name;
         }
