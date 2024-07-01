@@ -36,9 +36,9 @@ class UserControllerTest extends TestCase
 
     public function testRegisterWithValidData(): void
     {
-        $_POST['name'] = 'Lucas Test';
-        $_POST['email'] = 'lucas@mail.com';
-        $_POST['password'] = 'password123';
+        $_POST['name']      = 'Lucas Test';
+        $_POST['email']     = 'lucas@mail.com';
+        $_POST['password']  = 'password123';
 
         $this->userRepositoryMock
             ->expects($this->once())
@@ -53,9 +53,9 @@ class UserControllerTest extends TestCase
     public function testRegisterWithInvalidEmail(): void
     {
         $_POST = [
-            'email' => 'test',
-            'name' => 'test',
-            'password' => '123456'
+            'email'     => 'test',
+            'name'      => 'test',
+            'password'  => '123456'
         ];
 
         $response = $this->controller->register();
@@ -99,8 +99,8 @@ class UserControllerTest extends TestCase
     public function testUpdateWithInvalidData($invalidId): void
     {
         $params = [
-            'id' => $invalidId,
-            'name' => 'Lucas Test',
+            'id'    => $invalidId,
+            'name'  => 'Lucas Test',
             'email' => 'lucas@mail.com'
         ];
 
@@ -111,12 +111,15 @@ class UserControllerTest extends TestCase
     public function testUpdateWithValidData(): void
     {
         $params = [
-            'id' => 1,
-            'name' => 'Lucas Test',
+            'id'    => 1,
+            'name'  => 'Lucas Test',
             'email' => 'lucas@mail.com'
         ];
 
-        $jsonData = ['name' => 'Lucas Test', 'email' => 'lucas@mail.com'];
+        $jsonData = [
+            'name'  => 'Lucas Test',
+            'email' => 'lucas@mail.com'
+        ];
 
         $this->httpRequestHelperMock->expects($this->once())
             ->method('getInputStreamParams')
@@ -138,14 +141,16 @@ class UserControllerTest extends TestCase
     public function testUpdateUserNotFound(): void
     {
         $params = [
-            'id' => 1,
-            'name' => 'Lucas Test',
+            'id'    => 1,
+            'name'  => 'Lucas Test',
             'email' => 'lucas@mail.com'
         ];
 
-        $jsonData = ['name' => 'Lucas Test', 'email' => 'lucas@mail.com'];
+        $jsonData = [
+            'name'  => 'Lucas Test',
+            'email' => 'lucas@mail.com'
+        ];
 
-        // Mock HttpRequestHelper para retornar $jsonData
         $this->httpRequestHelperMock
             ->expects($this->once())
             ->method('getInputStreamParams')

@@ -124,13 +124,12 @@ class AddressController extends Controller
             return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
-        $update = [];
-
         $data = $this->httpRequestHelper->getInputStreamParams('PUT');
         if (!$data) {
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
+        $update = [];
         if ($userId = $_SESSION['user_id'] ?? null) {
             $update['user_id'] = $userId;
         }
@@ -143,7 +142,7 @@ class AddressController extends Controller
             $update['city'] = $city;
         }
 
-        if (!$state = $data['state'] ?? null) {
+        if ($state = $data['state'] ?? null) {
             $update['state'] = $state;
         }
 

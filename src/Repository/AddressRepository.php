@@ -60,7 +60,7 @@ class AddressRepository extends BaseRepository
                 return ['status' => 'NOT_FOUND', 'message' => 'Address not found'];
             }
 
-            return ['status' => 'SUCCESS', 'message' => 'Address updated successfully', 'address' => $address];
+            return ['status' => 'SUCCESS', 'message' => 'Address updated successfully', 'id' => $address['id']];
         } else {
             if ($id = $this->create($data)) {
                 return ['status' => 'SUCCESS', 'message' => 'Address created successfully', 'id' => $id];
