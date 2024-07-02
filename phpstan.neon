@@ -1,0 +1,10 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+parameters:
+    treatPhpDocTypesAsCertain: false
+    level: 5
+    paths:
+        - src/
+    ignoreErrors:
+        -
+            message: '#Call to an undefined method#'

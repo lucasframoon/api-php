@@ -1,11 +1,9 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
 # Controls when the workflow will run
 on:
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: ["main", "develop"]
 
 jobs:
   build:
@@ -13,19 +11,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up PHP with Composer
+      uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
-    - uses: actions/checkout@v3
+        php-version: '8.0.30'
+        extensions: mbstring, intl, dom, xml, zip, json
+        coverage: none
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
     
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
     
-    - name: Install Dependencies
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Install Composer dependencies
+      run: |
+        composer install --no-scripts --no-progress --prefer-dist
+        composer dump-autoload --optimize --no-dev --classmap-authoritative
+        
+    - name: Fix permissions
+      run: sudo chown -R $USER:$USER vendor
     
-    - name: Installing Package.json
+    - name: Install Node.js dependencies
       run: npm install
-      
-    - name: Execute PHPSTAN
+    
+    - name: Execute PHPStan
       run: vendor/bin/phpstan analyse
