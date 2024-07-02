@@ -1,51 +1,7 @@
-name: CI
+- name: Debug version
+  run: |
+    php --version
+    vendor/bin/phpunit --version
 
-# Controls when the workflow will run
-on:
-  pull_request:
-    branches: ["main", "develop"]
-
-jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up PHP with Composer
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.0.30'
-        extensions: mbstring, intl, dom, xml, zip, json
-        coverage: none
-
-    - name: Cache Composer packages
-      uses: actions/cache@v3
-      with:
-        path: vendor
-        key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-composer-
-    
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-    
-    - name: Install Composer dependencies
-      run: |
-        composer install --no-scripts --no-progress --prefer-dist
-        composer dump-autoload --optimize --no-dev --classmap-authoritative
-        
-    - name: Fix permissions
-      run: sudo chown -R $USER:$USER vendor
-    
-    - name: Install Node.js dependencies
-      run: npm install
-    
-    - name: Execute PHPStan
-      run: vendor/bin/phpstan analyse
-      
-    - name: Execute phpunit
-      run: vendor/bin/phpunit
-        
+- name: list
+  run: ls -la vendor
