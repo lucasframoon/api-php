@@ -17,7 +17,7 @@ jobs:
     - name: Set up PHP with Composer
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.0.30'
         extensions: mbstring, intl, dom, xml, zip, json
         coverage: none
 
