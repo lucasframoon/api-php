@@ -86,4 +86,15 @@ class AddressRepository extends BaseRepository
 
         return $stmt->rowCount() > 0 ? $stmt->fetchAll() : null;
     }
+
+    public function checkUserId(int $userId): bool
+    {
+        $sql = "SELECT * 
+                FROM users 
+                WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $userId);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
 }
