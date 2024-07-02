@@ -10,5 +10,6 @@ require '../config/diconfig.php';
 
 use Src\Route\Router;
 
+// @phpstan-ignore-next-line
 $router = new Router($container);
 $router->dispatch();
