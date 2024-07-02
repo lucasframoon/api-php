@@ -45,12 +45,3 @@ jobs:
     
     - name: Execute PHPStan
       run: vendor/bin/phpstan analyse
-
-        
-    - name: Debug version
-      run: |
-        php --version
-        vendor/bin/phpunit --version
-
-    - name: list
-      run: ls -la vendor
