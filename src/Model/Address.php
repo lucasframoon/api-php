@@ -6,8 +6,8 @@ namespace Src\Model;
 
 class Address extends Model
 {
-    private string $id;
-    private string $user_id;
+    private int $id = 0;
+    private int $user_id;
     private string $street;
     private string $city;
     private string $state;
@@ -16,12 +16,17 @@ class Address extends Model
     private string $created_at;
     private string $updated_at;
 
-    public function getId(): ?string
+    public function __construct(?array $fields = [])
+    {
+        $this->fromArray($fields);
+    }
+
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getUserId(): ?string
+    public function getUserId(): ?int
     {
         return $this->user_id;
     }
@@ -46,7 +51,7 @@ class Address extends Model
         return $this->postal_code;
     }
 
-    public function getCounty(): ?string
+    public function getCountry(): ?string
     {
         return $this->country;
     }
@@ -61,14 +66,14 @@ class Address extends Model
         return $this->updated_at;
     }
 
-    public function setId(string $id): void
+    public function setId(string|int $id): void
     {
-        $this->id = $id;
+        $this->id = (int)$id;
     }
 
-    public function setUserId(string $user_id): void
+    public function setUserId(string|int $user_id): void
     {
-        $this->user_id = $user_id;
+        $this->user_id = (int)$user_id;
     }
 
     public function setStreet(string $street): void
@@ -91,7 +96,7 @@ class Address extends Model
         $this->postal_code = $postal_code;
     }
 
-    public function setCounty(string $country): void
+    public function setCountry(string $country): void
     {
         $this->country = $country;
     }

@@ -5,25 +5,44 @@ declare(strict_types=1);
 namespace Src\Repository;
 
 use PDO;
+use Src\Model\ModelInterface;
 
 abstract class BaseRepository
 {
     protected string $tableName;
+    protected ModelInterface $model;
 
     public function __construct(protected PDO $db)
     {
     }
 
     abstract public function getTable(): string;
-    abstract public function save(array $data, ?int $id = null): array;
+
+    /**
+     * Saves a model to the database
+     *
+     * @param ModelInterface $model
+     * @throws \Exception If the already exists on create or there is an error during the save operation
+     * @return bool True if the save operation was successful, false otherwise
+     */
+    abstract public function save(ModelInterface $model): bool;
+
+    public function getModel(int $id): ModelInterface
+    {
+        if ($model = $this->findById($id)) {
+            $this->model = $model;
+        }
+
+        return $this->model;
+    }
 
     /**
      * Find a record in the database by its ID
      *
      * @param int $id The ID of the record to find
-     * @return array|null The record found, or null if no record is found
+     * @return ModelInterface|null Model or null if no record is found
      */
-    public function findById(int $id): ?array
+    public function findById(int $id): ?ModelInterface
     {
         $sql = "SELECT * 
                 FROM " . $this->tableName . " 
@@ -31,7 +50,7 @@ abstract class BaseRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute(['id' => $id]);
 
-        return $stmt->rowCount() > 0 ? $stmt->fetch() : null;
+        return $stmt->rowCount() > 0 ? $this->model->fromArray($stmt->fetch()) : null;
     }
 
     /**
@@ -71,34 +90,38 @@ abstract class BaseRepository
     /**
      * Inserts a new record into the table
      *
-     * @param array $data An associative array containing the column names and their corresponding values
+     * @param ModelInterface $model
      * @return int|null The ID of the inserted record, or null if the insertion failed
      */
-    public function create(array $data): ?int
+    public function create(ModelInterface $model): ?int
     {
+        $data = $model->toArray();
+
         $fields = implode(', ', array_keys($data));
         $placeholders = ':' . implode(', :', array_keys($data));
 
         $sql = "INSERT INTO " . $this->tableName . " (" . $fields . ") VALUES (" . $placeholders . ")";
         $stmt = $this->db->prepare($sql);
-
+        
         foreach ($data as $key => $value) {
             $stmt->bindValue(':' . $key, $value);
         }
-
+     
         $result = $stmt->execute();
+     
         return $result ? (int)$this->db->lastInsertId() : null;
     }
 
     /**
      * Updates a record in the database with the provided data with the specified ID
      *
-     * @param array $data An associative array containing the column names and their corresponding values
-     * @param int $id The ID of the record to update
+     * @param ModelInterface $model
      * @return bool True if the update was successful, false otherwise
      */
-    public function update(array $data, int $id): bool
+    public function update(ModelInterface $model): bool
     {
+        $data = $model->toArray(false);
+
         $fields = '';
         foreach ($data as $key => $value) {
             $fields .= $key . ' = :' . $key . ', ';
@@ -113,7 +136,7 @@ abstract class BaseRepository
             $stmt->bindValue(':' . $key, $value);
         }
 
-        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':id', $data['id']);
         $stmt->execute();
 
         return $stmt->rowCount() > 0;

@@ -10,12 +10,29 @@ use Src\Model\{User, ModelInterface};
 class UserRepository extends BaseRepository
 {
     protected string $tableName = 'users';
+    protected User|ModelInterface $model;
 
     public function __construct(
-        protected PDO $db,
-        protected User $model
+        protected PDO $db
     ) {
+        $this->model = new User();
         parent::__construct($db);
+    }
+
+    public function getModel(int $id, bool $setPassword = false): User
+    {
+        /** @var User $model */
+        $model = $this->findById($id);
+
+        if ($model) {
+            $this->model = $model;
+            if (!$setPassword) {
+                $this->model->setPassword('');
+            }
+        }
+
+        /** @return User|ModelInterface */
+        return $this->model;
     }
 
     public function getTable(): string
@@ -40,7 +57,8 @@ class UserRepository extends BaseRepository
 
         if ($stmt->rowCount() > 0) {
             $userInfo = $stmt->fetch();
-            $this->model->fromArray($userInfo, false);
+            /** @var User */
+            $this->model->fromArray($userInfo, ['setPassword' => false]);
             unset($userInfo['password']);
 
             $userAddressesInfo = [];
@@ -53,37 +71,59 @@ class UserRepository extends BaseRepository
         return null;
     }
 
-    public function save(array $data, ?int $id = null): array
+    /**
+     * @inheritDoc
+     */
+    public function save(ModelInterface|User $model): bool
     {
-        if ($id > 0) {
-            $this->update($data, $id);
-            $user = $this->findById($id);
-
-            if (!$user) {
-                return ['status' => 'NOT_FOUND', 'message' => 'User not found'];
-            }
-
-            return ['status' => 'SUCCESS', 'message' => 'User updated successfully', 'id' => $user['id']];
-        } else {
-            if ($this->findUserByEmail($data['email'])) {
-                return ['status' => 'ALREADY_EXISTS', 'message' => 'Email already exists'];
-            }
-
-            if ($id = $this->create($data)) {
-                return ['status' => 'SUCCESS', 'message' => 'User created successfully', 'id' => $id];
-            }
-
-            return ['status' => 'ERROR', 'message' => 'Failed to create user'];
+        /** @var User $model */
+        if ($model->getId() > 0) {
+            return $this->update($model);
+        } elseif ($this->findUserByEmail($model->getEmail())) {
+            throw new \Exception('ALREADY_EXISTS');
+        } elseif ($this->create($model)) {
+            return true;
         }
+
+        throw new \Exception('ERROR');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function update(ModelInterface $model): bool
+    {
+        $data = $model->toArray();
+        unset($data['password']);
+
+        $fields = '';
+        foreach ($data as $key => $value) {
+            $fields .= $key . ' = :' . $key . ', ';
+        }
+
+        $fields = rtrim($fields, ', ');
+
+        $sql = "UPDATE " . $this->tableName . " SET " . $fields . " WHERE id = :id";
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+
+        $stmt->bindValue(':id', $data['id']);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
     }
 
     /**
      * Find user by email
      *
      * @param string $email
+     * @param bool $setPassword
      * @return ModelInterface
      */
-    public function findUserByEmail(string $email): ?ModelInterface
+    public function findUserByEmail(string $email, bool $setPassword = false): ?ModelInterface
     {
         $sql = "SELECT * 
                 FROM " . $this->tableName . " 
@@ -94,7 +134,8 @@ class UserRepository extends BaseRepository
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            return $this->model->fromArray($stmt->fetch());
+            /** @var User */
+            return $this->model->fromArray($stmt->fetch(), ['setPassword' => $setPassword]);
         }
 
         return null;

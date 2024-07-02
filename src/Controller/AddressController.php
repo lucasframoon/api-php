@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Src\Controller;
 
 use Src\Util\Util;
+use Src\Model\Address;
 use Src\Helper\HttpRequestHelper;
 use Src\Repository\AddressRepository;
 
 class AddressController extends Controller
 {
     public function __construct(
+        private Address $model,
         private AddressRepository $repository,
         private HttpRequestHelper $httpRequestHelper
     ) {
@@ -55,7 +57,7 @@ class AddressController extends Controller
             return $this->errorResponse($this->getMissingParametersText($missingParameter), 'MISSING_PARAMETERS');
         }
 
-        return $this->repository->save([
+        $this->model->fromArray([
             'user_id'       => $userId,
             'street'        => $street,
             'city'          => $city,
@@ -63,6 +65,13 @@ class AddressController extends Controller
             'postal_code'   => $postalCode,
             'country'       => $country
         ]);
+        
+        try {
+            $this->repository->save($this->model);
+            return $this->successResponse(['message' => 'Address created successfully']);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to create address', 'ERROR');
+        }
     }
 
     public function getData(array $params): array
@@ -143,32 +152,43 @@ class AddressController extends Controller
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
-        $update = [];
+        /** @var Address $address */
+        $address = $this->repository->getModel((int)$id);
+        if (!$address->getId()) {
+            return $this->errorResponse('Address not found', 'NOT_FOUND');
+        }
+
         if ($userId = $_SESSION['user_id'] ?? null) {
-            $update['user_id'] = $userId;
+            $address->setUserId($userId);
         }
 
         if ($street = $data['street'] ?? null) {
-            $update['street'] = $street;
+            $address->setStreet($street);
         }
 
         if ($city = $data['city'] ?? null) {
-            $update['city'] = $city;
+            $address->setCity($city);
         }
 
         if ($state = $data['state'] ?? null) {
-            $update['state'] = $state;
+            $address->setState($state);
         }
 
         if ($postalCode = $data['postal_code'] ?? null) {
-            $update['postal_code'] = $postalCode;
+            $address->setPostalCode($postalCode);
         }
 
         if ($country = $data['country'] ?? null) {
-            $update['country'] = $country;
+            $address->setCountry($country);
         }
-
-        return $this->repository->save($update, (int)$id);
+        
+        try {
+            $this->repository->save($address);
+            return $this->successResponse(['message' => 'Address updated successfully']);
+        } catch (\Exception $e) {
+            //TOTO: Log error
+            return $this->errorResponse('Failed to update address', 'ERROR');
+        }
     }
 
     public function delete(array $params): array

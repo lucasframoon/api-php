@@ -6,15 +6,17 @@ namespace Src\Repository;
 
 use PDO;
 use Src\Model\Address;
+use Src\Model\ModelInterface;
 
 class AddressRepository extends BaseRepository
 {
     protected string $tableName = 'addresses';
+    protected Address|ModelInterface $model;
 
     public function __construct(
-        protected PDO $db,
-        protected Address $model
+        protected PDO $db
     ) {
+        $this->model = new Address();
         parent::__construct($db);
     }
 
@@ -50,24 +52,13 @@ class AddressRepository extends BaseRepository
         return null;
     }
 
-    public function save(array $data, ?int $id = null): array
+    public function save(ModelInterface|Address $model): bool
     {
-        if ($id > 0) {
-            $this->update($data, $id);
-            $address = $this->getData($id, (int)$data['user_id']);
-
-            if (!$address) {
-                return ['status' => 'NOT_FOUND', 'message' => 'Address not found'];
-            }
-
-            return ['status' => 'SUCCESS', 'message' => 'Address updated successfully', 'id' => $address['id']];
-        } else {
-            if ($id = $this->create($data)) {
-                return ['status' => 'SUCCESS', 'message' => 'Address created successfully', 'id' => $id];
-            }
-
-            return ['status' => 'ERROR', 'message' => 'Failed to create address'];
+        if (($model->getId() > 0 && $this->update($model)) || $this->create($model)) {
+            return true;
         }
+
+        throw new \Exception('ERROR');
     }
 
     /**
