@@ -28,7 +28,6 @@ class AuthController extends Controller
             return $this->errorResponse('Invalid credentials', 'FORBIDDEN', 403);
         }
 
-        /** @var User $user */
         $user = $this->repository->findUserByEmail($email, true);
         if (!$user || !password_verify($password, $user->getPassword())) {
             return $this->errorResponse('Invalid email or password', 'FORBIDDEN', 403);

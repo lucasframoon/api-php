@@ -19,9 +19,8 @@ class UserRepository extends BaseRepository
         parent::__construct($db);
     }
 
-    public function getModel(int $id, bool $setPassword = false): User
+    public function getModel(int $id, bool $setPassword = false): User|ModelInterface
     {
-        /** @var User $model */
         $model = $this->findById($id);
 
         if ($model) {
@@ -31,7 +30,6 @@ class UserRepository extends BaseRepository
             }
         }
 
-        /** @return User|ModelInterface */
         return $this->model;
     }
 
@@ -57,7 +55,6 @@ class UserRepository extends BaseRepository
 
         if ($stmt->rowCount() > 0) {
             $userInfo = $stmt->fetch();
-            /** @var User */
             $this->model->fromArray($userInfo, ['setPassword' => false]);
             unset($userInfo['password']);
 
@@ -76,7 +73,6 @@ class UserRepository extends BaseRepository
      */
     public function save(ModelInterface|User $model): bool
     {
-        /** @var User $model */
         if ($model->getId() > 0) {
             return $this->update($model);
         } elseif ($this->findUserByEmail($model->getEmail())) {
@@ -134,7 +130,6 @@ class UserRepository extends BaseRepository
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            /** @var User */
             return $this->model->fromArray($stmt->fetch(), ['setPassword' => $setPassword]);
         }
 

@@ -6,4 +6,7 @@
 # PHPStan
 vendor/bin/phpstan --configuration=phpstan.neon --no-progress --memory-limit=1G
 
+# PHPUnit
+vendor/bin/phpunit
+
 exit 0
