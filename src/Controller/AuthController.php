@@ -29,14 +29,14 @@ class AuthController extends Controller
         }
 
         /** @var User $user */
-        $user = $this->repository->findUserByEmail($email);
+        $user = $this->repository->findUserByEmail($email, true);
         if (!$user || !password_verify($password, $user->getPassword())) {
             return $this->errorResponse('Invalid email or password', 'FORBIDDEN', 403);
         } else {
             $payload = [
                 'iss' => 'phpapi.com',
                 'iat' => time(),
-                // 'exp' => time() + (60 * 60), // 1 hour expiration TODO ACTIVE
+                'exp' => time() + (60 * 60), // 1 hour expiration
                 'sub' => $user->getid()
             ];
 
