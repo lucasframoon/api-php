@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Src\Controller;
 
 use Src\Util\Util;
-use Src\Model\Address;
+use Src\Model\{ Address, ModelInterface};
 use Src\Helper\HttpRequestHelper;
 use Src\Repository\AddressRepository;
 
 class AddressController extends Controller
 {
+    private Address|ModelInterface $model;
+
     public function __construct(
-        private Address $model,
         private AddressRepository $repository,
         private HttpRequestHelper $httpRequestHelper
     ) {
+        $this->model = new Address();
     }
 
     public function new(): array
@@ -152,38 +154,37 @@ class AddressController extends Controller
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
-        /** @var Address $address */
-        $address = $this->repository->getModel((int)$id);
-        if (!$address->getId()) {
+        $this->model = $this->repository->getModel((int)$id);
+        if (!$this->model->getId()) {
             return $this->errorResponse('Address not found', 'NOT_FOUND');
         }
 
         if ($userId = $_SESSION['user_id'] ?? null) {
-            $address->setUserId($userId);
+            $this->model->setUserId($userId);
         }
 
         if ($street = $data['street'] ?? null) {
-            $address->setStreet($street);
+            $this->model->setStreet($street);
         }
 
         if ($city = $data['city'] ?? null) {
-            $address->setCity($city);
+            $this->model->setCity($city);
         }
 
         if ($state = $data['state'] ?? null) {
-            $address->setState($state);
+            $this->model->setState($state);
         }
 
         if ($postalCode = $data['postal_code'] ?? null) {
-            $address->setPostalCode($postalCode);
+            $this->model->setPostalCode($postalCode);
         }
 
         if ($country = $data['country'] ?? null) {
-            $address->setCountry($country);
+            $this->model->setCountry($country);
         }
         
         try {
-            $this->repository->save($address);
+            $this->repository->save($this->model);
             return $this->successResponse(['message' => 'Address updated successfully']);
         } catch (\Exception $e) {
             //TOTO: Log error

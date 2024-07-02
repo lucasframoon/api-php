@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Src\Repository;
 
 use PDO;
-use Src\Model\Address;
-use Src\Model\ModelInterface;
+use Src\Model\{Address, ModelInterface};
 
 class AddressRepository extends BaseRepository
 {
