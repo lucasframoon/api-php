@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4 # Atualizado para Node.js 20
+      uses: actions/checkout@v4
       
     - name: Set up PHP with Composer
       uses: shivammathur/setup-php@v2
@@ -22,7 +22,7 @@ jobs:
         coverage: none
 
     - name: Cache Composer packages
-      uses: actions/cache@v3 # Atualizado para Node.js 20
+      uses: actions/cache@v3
       with:
         path: vendor
         key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
