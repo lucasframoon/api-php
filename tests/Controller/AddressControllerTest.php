@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Controller;
 
+use Src\Model\Address;
 use PHPUnit\Framework\TestCase;
 use Src\Helper\HttpRequestHelper;
 use Src\Controller\AddressController;
@@ -13,14 +14,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class AddressControllerTest extends TestCase
 {
     protected AddressController $controller;
+    protected $addressMock;
     protected $addressRepositoryMock;
     protected $httpRequestHelperMock;
 
     protected function setUp(): void
     {
+        $this->addressMock = $this->createMock(Address::class);
         $this->addressRepositoryMock = $this->createMock(AddressRepository::class);
         $this->httpRequestHelperMock = $this->createMock(HttpRequestHelper::class);
-        $this->controller = new AddressController($this->addressRepositoryMock, $this->httpRequestHelperMock);
+        $this->controller = new AddressController($this->addressMock, $this->addressRepositoryMock, $this->httpRequestHelperMock);
     }
 
     public static function invalidIdProvider(): array
@@ -125,7 +128,7 @@ class AddressControllerTest extends TestCase
         $this->addressRepositoryMock
             ->expects($this->once())
             ->method('save')
-            ->willReturn(['status' => 'SUCCESS', 'id' => 1]);
+            ->willReturn(true);
 
         $response = $this->controller->new();
 
@@ -218,14 +221,25 @@ class AddressControllerTest extends TestCase
 
         $this->addressRepositoryMock
             ->expects($this->once())
+            ->method('getModel')
+            ->with($params['id'])
+            ->willReturn($this->addressMock);
+
+        $this->addressMock
+            ->expects($this->once())
+            ->method('getId')
+            ->willReturn($params['id']);
+
+
+        $this->addressRepositoryMock
+            ->expects($this->once())
             ->method('save')
-            ->with($expectedUpdateData, $params['id'])
-            ->willReturn(['status' => 'SUCCESS', 'id' => $params['id']]);
+            ->with($this->addressMock)
+            ->willReturn(true);
 
         $response = $this->controller->update($params);
 
         $this->assertEquals('SUCCESS', $response['status']);
-        $this->assertArrayHasKey('id', $response);
     }
 
     public function testUpdateUserNotFound(): void
@@ -256,9 +270,9 @@ class AddressControllerTest extends TestCase
 
         $this->addressRepositoryMock
             ->expects($this->once())
-            ->method('save')
-            ->with($expectedUpdateData, $params['id'])
-            ->willReturn(['status' => 'NOT_FOUND', 'message' => 'User not found']);
+            ->method('getModel')
+            ->with($params['id'])
+            ->willReturn($this->addressMock);
 
         $response = $this->controller->update($params);
 

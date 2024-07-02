@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Controller;
 
+use Src\Model\User;
 use PHPUnit\Framework\TestCase;
 use Src\Helper\HttpRequestHelper;
 use Src\Controller\UserController;
@@ -13,14 +14,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class UserControllerTest extends TestCase
 {
     protected UserController $controller;
+    protected $userMock;
     protected $userRepositoryMock;
     protected $httpRequestHelperMock;
 
     protected function setUp(): void
     {
+        $this->userMock = $this->createMock(User::class);
         $this->userRepositoryMock = $this->createMock(UserRepository::class);
         $this->httpRequestHelperMock = $this->createMock(HttpRequestHelper::class);
-        $this->controller = new UserController($this->userRepositoryMock, $this->httpRequestHelperMock);
+        $this->controller = new UserController($this->userMock, $this->userRepositoryMock, $this->httpRequestHelperMock);
     }
 
     public static function invalidIdProvider(): array
@@ -43,7 +46,7 @@ class UserControllerTest extends TestCase
         $this->userRepositoryMock
             ->expects($this->once())
             ->method('save')
-            ->willReturn(['status' => 'SUCCESS', 'id' => 1]);
+            ->willReturn(true);
 
         $response = $this->controller->register();
 
@@ -128,14 +131,24 @@ class UserControllerTest extends TestCase
 
         $this->userRepositoryMock
             ->expects($this->once())
+            ->method('getModel')
+            ->with($params['id'], true)
+            ->willReturn($this->userMock);
+
+        $this->userMock
+            ->expects($this->once())
+            ->method('getId')
+            ->willReturn($params['id']);
+
+        $this->userRepositoryMock
+            ->expects($this->once())
             ->method('save')
-            ->with($jsonData, $params['id'])
-            ->willReturn(['status' => 'SUCCESS', 'id' => $params['id']]);
+            ->with($this->userMock)
+            ->willReturn(true);
 
         $response = $this->controller->update($params);
 
         $this->assertEquals('SUCCESS', $response['status']);
-        $this->assertArrayHasKey('id', $response);
     }
 
     public function testUpdateUserNotFound(): void
@@ -159,9 +172,9 @@ class UserControllerTest extends TestCase
 
         $this->userRepositoryMock
             ->expects($this->once())
-            ->method('save')
-            ->with($jsonData, $params['id'])
-            ->willReturn(['status' => 'NOT_FOUND', 'message' => 'User not found']);
+            ->method('getModel')
+            ->with($params['id'], true)
+            ->willReturn($this->userMock);
 
         $response = $this->controller->update($params);
 

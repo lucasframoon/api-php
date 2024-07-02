@@ -22,7 +22,7 @@ class User extends Model
      * Creates an instance of the called class from an associative array
      *
      * @param array $data The associative array containing the data
-     * @param bool $setPassword Whether to set the password
+     * @param array $options
      * @return User The newly created instance
      */
     public function fromArray(array $data, array $options = ['setPassword' => true]): User

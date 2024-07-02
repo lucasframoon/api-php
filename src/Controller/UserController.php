@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Src\Controller;
 
 use Src\Util\Util;
-use Src\Model\User;
+use Src\Model\{User, ModelInterface};
 use Src\Helper\HttpRequestHelper;
 use Src\Repository\UserRepository;
 
 class UserController extends Controller
 {
+    private User|ModelInterface $model;
+
     public function __construct(
         private UserRepository $repository,
         private HttpRequestHelper $httpRequestHelper
     ) {
+        $this->model = new User();
     }
 
     public function register(): array
@@ -40,14 +43,14 @@ class UserController extends Controller
             return $this->errorResponse('Invalid email', 'INVALID_PARAMETER');
         }
 
-        $user = new User([
+        $this->model->fromArray([
             'name'      => $name,
             'email'     => $email,
             'password'  => password_hash($password, PASSWORD_BCRYPT)
         ]);
 
         try {
-            $this->repository->save($user);
+            $this->repository->save($this->model);
             return $this->successResponse(['message' => 'User created successfully']);
         } catch (\Exception $e) {
             if ($e->getMessage() == 'ALREADY_EXISTS') {
@@ -84,21 +87,21 @@ class UserController extends Controller
             return $this->errorResponse('Invalid JSON', 'INVALID_PARAMETER');
         }
 
-        $user = $this->repository->getModel((int)$id, true);
-        if (!$user->getId()) {
-            return $this->errorResponse('Address not found', 'NOT_FOUND');
+        $this->model = $this->repository->getModel((int)$id, true);
+        if (!$this->model->getId()) {
+            return $this->errorResponse('User not found', 'NOT_FOUND');
         }
 
         if ($name = $data['name'] ?? null) {
-            $user->setName($name);
+            $this->model->setName($name);
         }
 
         if ($email = $data['email'] ?? null) {
-            $user->setEmail($email);
+            $this->model->setEmail($email);
         }
 
         try {
-            $this->repository->save($user);
+            $this->repository->save($this->model);
             return $this->successResponse(['message' => 'User updated successfully']);
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to update user', 'ERROR');
@@ -118,5 +121,20 @@ class UserController extends Controller
         }
 
         return $this->successResponse(['message' => 'User deleted']);
+    }
+
+    public function listUsers(): array
+    {
+        if (!$users = $this->repository->findAll()) {
+            return $this->successResponse(['users' => []]);
+        }
+
+        $clean = [];
+        foreach ($users as $user) {
+            unset($user['password']);
+            $clean[] = $user;
+        }
+
+        return $this->successResponse(['users' => $clean]);
     }
 }
