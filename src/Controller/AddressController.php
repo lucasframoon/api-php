@@ -84,7 +84,7 @@ class AddressController extends Controller
     {
         $id = $params['id'] ?? null;
         // If user_id is provided in the request, use it instead of the current authenticated user
-        $userId = $params['user_id'] ?? ($_SESSION['user_id'] ?? null);
+        $userId = $_GET['user_id'] ?? ($_SESSION['user_id'] ?? null);
 
         if (!$userId) {
             return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
