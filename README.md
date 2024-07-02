@@ -18,7 +18,10 @@ Esta API permite o cadastro, controle de usuários e seus endereços. Ela utiliz
     ```
 
 ## Rotas
-
+- Documentação da API no Postman: [Link para a documentação do Postman](https://documenter.getpostman.com/view/19438074/2sA3dxCWGF)
+- 
+  (Nota: A documentação está disponível no Postman; atualmente, não está disponível em formato Swagger.)
+  
 ## Tecnologias Utilizadas
 
 - PHP 8
@@ -31,3 +34,6 @@ Esta API permite o cadastro, controle de usuários e seus endereços. Ela utiliz
 - Pré-commits e GitHub Actions configurados para verificação ao realizar push para `develop` ou `master`.
 - `fast-route` para gerenciamento de rotas.
 - `php-di` para injeção de dependência.
+
+- Kanban utilizado para separação das tarefas: [Link para o Kanban](https://github.com/users/lucasframoon/projects/2)
+- Qualquer dúvida pode me enviar uma mensagem em lucasframoon@gmail.com.
