@@ -20,8 +20,15 @@ class AddressController extends Controller
     {
         $missingParameter = [];
 
-        if (!$userId = $_SESSION['user_id'] ?? null) {
+        // If user_id is provided in the request, use it instead of the current authenticated user
+        $userId = $_POST['user_id'] ?? ($_SESSION['user_id'] ?? null);
+
+        if (!$userId) {
             return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
+        }
+
+        if (!Util::isValidId($userId)) {
+            return $this->errorResponse('User id must be an integer', 'INVALID_PARAMETER');
         }
 
         if (!$street = $_POST['street'] ?? null) {
@@ -61,9 +68,10 @@ class AddressController extends Controller
     public function getData(array $params): array
     {
         $id = $params['id'] ?? null;
-        $currentUserId = $_SESSION['user_id'] ?? null;
+        // If user_id is provided in the request, use it instead of the current authenticated user
+        $userId = $params['user_id'] ?? ($_SESSION['user_id'] ?? null);
 
-        if (!$currentUserId) {
+        if (!$userId) {
             return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
 
@@ -71,7 +79,11 @@ class AddressController extends Controller
             return $this->errorResponse('ID must be an integer', 'INVALID_PARAMETER');
         }
 
-        if ($addressData = $this->repository->getData((int)$id, (int)$currentUserId)) {
+        if (!Util::isValidId($userId)) {
+            return $this->errorResponse('User id must be an integer', 'INVALID_PARAMETER');
+        }
+
+        if ($addressData = $this->repository->getData((int)$id, (int)$userId)) {
             return $this->successResponse(['address' => $addressData]);
         }
 
@@ -87,8 +99,10 @@ class AddressController extends Controller
     public function getUserAddresses(): array
     {
         $where = [];
-        $currentUserId = $_SESSION['user_id'] ?? null;
-        if (!$currentUserId) {
+        // If user_id is provided in the request, use it instead of the current authenticated user
+        $userId = $_GET['user_id'] ?? ($_SESSION['user_id'] ?? null);
+
+        if (!$userId) {
             return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
 
@@ -113,7 +127,7 @@ class AddressController extends Controller
             $where['country'] = $country;
         }
 
-        $addressData = $this->repository->findByUserId((int)$currentUserId, $where);
+        $addressData = $this->repository->findByUserId((int)$userId, $where);
         return $this->successResponse(['addresses' => $addressData ?? []]);
     }
 
