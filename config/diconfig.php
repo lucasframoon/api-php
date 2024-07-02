@@ -3,10 +3,7 @@
 require_once '../vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use Src\Model\User;
 use DI\ContainerBuilder;
-use Src\Controller\UserController;
-use Src\Repository\UserRepository;
 
 //Loading .env file
 $dotenv = Dotenv::createImmutable('../');
@@ -24,12 +21,6 @@ $containerBuilder->addDefinitions([
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
         return $pdo;
-    },
-    UserRepository::class => function ($container) {
-        return new UserRepository($container->get(PDO::class), new User());
-    },
-    UserController::class => function ($container) {
-        return new UserController($container->get(UserRepository::class));
     },
 ]);
 

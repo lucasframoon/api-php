@@ -89,7 +89,7 @@ class UserController extends Controller
 
         $this->model = $this->repository->getModel((int)$id, true);
         if (!$this->model->getId()) {
-            return $this->errorResponse('Address not found', 'NOT_FOUND');
+            return $this->errorResponse('User not found', 'NOT_FOUND');
         }
 
         if ($name = $data['name'] ?? null) {
@@ -121,5 +121,20 @@ class UserController extends Controller
         }
 
         return $this->successResponse(['message' => 'User deleted']);
+    }
+
+    public function listUsers(): array
+    {
+        if (!$users = $this->repository->findAll()) {
+            return $this->successResponse(['users' => []]);
+        }
+
+        $clean = [];
+        foreach ($users as $user) {
+            unset($user['password']);
+            $clean[] = $user;
+        }
+
+        return $this->successResponse(['users' => $clean]);
     }
 }

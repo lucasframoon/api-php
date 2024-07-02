@@ -210,4 +210,13 @@ class AddressController extends Controller
 
         return $this->successResponse(['message' => 'Address deleted']);
     }
+
+    public function listAddresses(): array
+    {
+        if (!$addresses = $this->repository->findAll()) {
+            return $this->successResponse(['addresses' => []]);
+        }
+
+        return $this->successResponse(['addresses' => $addresses]);
+    }
 }
