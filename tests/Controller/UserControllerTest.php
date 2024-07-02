@@ -23,7 +23,7 @@ class UserControllerTest extends TestCase
         $this->userMock = $this->createMock(User::class);
         $this->userRepositoryMock = $this->createMock(UserRepository::class);
         $this->httpRequestHelperMock = $this->createMock(HttpRequestHelper::class);
-        $this->controller = new UserController($this->userMock, $this->userRepositoryMock, $this->httpRequestHelperMock);
+        $this->controller = new UserController($this->userRepositoryMock, $this->httpRequestHelperMock);
     }
 
     public static function invalidIdProvider(): array

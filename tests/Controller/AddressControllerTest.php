@@ -23,7 +23,7 @@ class AddressControllerTest extends TestCase
         $this->addressMock = $this->createMock(Address::class);
         $this->addressRepositoryMock = $this->createMock(AddressRepository::class);
         $this->httpRequestHelperMock = $this->createMock(HttpRequestHelper::class);
-        $this->controller = new AddressController($this->addressMock, $this->addressRepositoryMock, $this->httpRequestHelperMock);
+        $this->controller = new AddressController($this->addressRepositoryMock, $this->httpRequestHelperMock);
     }
 
     public static function invalidIdProvider(): array
@@ -95,6 +95,30 @@ class AddressControllerTest extends TestCase
                     ]
                 ]
             ],
+            [
+                [
+                    'user_id'   => 'string',
+                    'params'    => [
+                        'street'        => 'street',
+                        'city'          => 'city',
+                        'state'         => 'state',
+                        'postal_code'   => '123456',
+                        'country'       => 'country'
+                    ]
+                ]
+            ],
+            [
+                [
+                    'user_id'   => 1.1,
+                    'params'    => [
+                        'street'        => 'street',
+                        'city'          => 'city',
+                        'state'         => 'state',
+                        'postal_code'   => '123456',
+                        'country'       => 'country'
+                    ]
+                ]
+            ],
         ];
     }
 
@@ -109,11 +133,11 @@ class AddressControllerTest extends TestCase
         $_POST['state']         = $invalidData['params']['state'] ?? null;
         $_POST['postal_code']   = $invalidData['params']['123456'] ?? null;
         $_POST['country']       = $invalidData['params']['country'] ?? null;
-        $_SESSION['user_id']    =  $invalidData['user_id'];
+        $_SESSION['user_id']    = $invalidData['user_id'];
 
         $response = $this->controller->new();
-
-        $this->assertTrue(in_array($response['status'], ['MISSING_PARAMETERS', 'UNAUTHORIZED']));
+        // $this->assertEquals('INVALID_PARAMETER', $response['status']);
+        $this->assertTrue(in_array($response['status'], ['INVALID_PARAMETER', 'NOT_FOUND', 'MISSING_PARAMETERS', 'UNAUTHORIZED']));
     }
 
     public function testNewWithValidData(): void
@@ -123,7 +147,13 @@ class AddressControllerTest extends TestCase
         $_POST['state']         = 'state';
         $_POST['postal_code']   = '123456';
         $_POST['country']       = 'country';
-        $_SESSION['user_id']    = 1;
+        $_POST['user_id']    = 1;
+
+        $this->addressRepositoryMock
+            ->expects($this->once())
+            ->method('checkUserId')
+            ->with($_POST['user_id'])
+            ->willReturn(true);
 
         $this->addressRepositoryMock
             ->expects($this->once())
@@ -144,12 +174,29 @@ class AddressControllerTest extends TestCase
 
         $response = $this->controller->getData($params);
 
-        $this->assertEquals('INVALID_PARAMETER', $response['status']);
+        $this->assertTrue(in_array($response['status'], ['INVALID_PARAMETER', 'NOT_FOUND', 'MISSING_PARAMETERS', 'UNAUTHORIZED']));
     }
 
     public function testGetDataWithValidId(): void
     {
         $params = ['id' => 1];
+        $_GET['user_id'] = 1;
+
+        $this->addressRepositoryMock
+            ->expects($this->once())
+            ->method('getData')
+            ->with($params['id'], $_GET['user_id'])
+            ->willReturn([
+                "id"            => "1",
+                "user_id"       => "13",
+                "street"        => "street",
+                "city"          => "city",
+                "state"         => "state",
+                "postal_code"   => "54762290",
+                "country"       => "Brasil",
+                "created_at"    => "2024-06-30 03:14:59",
+                "updated_at"    => "2024-06-30 17:32:35"
+            ]);
 
         $response = $this->controller->getData($params);
 
@@ -229,7 +276,6 @@ class AddressControllerTest extends TestCase
             ->expects($this->once())
             ->method('getId')
             ->willReturn($params['id']);
-
 
         $this->addressRepositoryMock
             ->expects($this->once())

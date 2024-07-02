@@ -30,15 +30,15 @@ class AddressController extends Controller
         if (!$userId) {
             return $this->errorResponse('Authentication required', 'UNAUTHORIZED', 401);
         }
-        
-        if (!$this->repository->checkUserId((int)$userId)) {
-            return $this->errorResponse('User not found, unable to create address', 'NOT_FOUND', 404);
-        }
 
         if (!Util::isValidId($userId)) {
             return $this->errorResponse('User id must be an integer', 'INVALID_PARAMETER');
         }
-
+        
+        if (!$this->repository->checkUserId((int)$userId)) {
+            return $this->errorResponse('User not found, unable to create address', 'NOT_FOUND', 404);
+        }
+       
         if (!$street = $_POST['street'] ?? null) {
             $missingParameter[] =  'street';
         }
